@@ -1,4 +1,4 @@
-import heapq
+from collections import deque
 
 
 class RedeSocialGrafo:
@@ -82,6 +82,31 @@ class RedeSocialGrafo:
         usuario = max(usuarios, key=self.grau_usuario)
         return usuario, self.grau_usuario(usuario)
 
+    def bfs(self, origem):
+        """Executa uma busca em largura e retorna ordem, niveis e predecessores."""
+        if not self.usuario_existe(origem):
+            raise ValueError("Selecione um usuario valido para iniciar a busca.")
+
+        fila = deque([origem])
+        visitados = {origem}
+        niveis = {origem: 0}
+        predecessores = {origem: None}
+        ordem = []
+
+        while fila:
+            usuario = fila.popleft()
+            ordem.append(usuario)
+
+            for vizinho in sorted(self._adjacencias.get(usuario, [])):
+                if vizinho in visitados:
+                    continue
+                visitados.add(vizinho)
+                niveis[vizinho] = niveis[usuario] + 1
+                predecessores[vizinho] = usuario
+                fila.append(vizinho)
+
+        return ordem, niveis, predecessores
+
     def caminho_mais_curto(self, origem, destino):
         """Retorna o menor caminho (lista de usuarios) e sua distancia."""
         if not self.usuario_existe(origem) or not self.usuario_existe(destino):
@@ -90,27 +115,9 @@ class RedeSocialGrafo:
         if origem == destino:
             return [origem], 0
 
-        distancias = {origem: 0}
-        predecessores = {origem: None}
-        fila = [(0, origem)]
+        ordem, niveis, predecessores = self.bfs(origem)
 
-        while fila:
-            distancia_atual, usuario = heapq.heappop(fila)
-
-            if usuario == destino:
-                break
-
-            if distancia_atual > distancias.get(usuario, float("inf")):
-                continue
-
-            for vizinho in self._adjacencias.get(usuario, []):
-                nova_distancia = distancia_atual + 1
-                if nova_distancia < distancias.get(vizinho, float("inf")):
-                    distancias[vizinho] = nova_distancia
-                    predecessores[vizinho] = usuario
-                    heapq.heappush(fila, (nova_distancia, vizinho))
-
-        if destino not in distancias:
+        if destino not in ordem:
             return [], None
 
         caminho = []
@@ -120,7 +127,7 @@ class RedeSocialGrafo:
             atual = predecessores.get(atual)
 
         caminho.reverse()
-        return caminho, distancias[destino]
+        return caminho, niveis[destino]
 
     def recomendar_amigos_bfs(self, usuario, limite=5):
         """Sugere amigos dos amigos usando uma BFS limitada a distancia 2."""

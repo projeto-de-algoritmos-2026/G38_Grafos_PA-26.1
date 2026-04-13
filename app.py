@@ -1,4 +1,5 @@
 import tkinter as tk
+import math
 from tkinter import messagebox, ttk
 
 from grafo import RedeSocialGrafo
@@ -130,6 +131,24 @@ class InterfaceRedeSocial:
         )
         botao_caminho.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(10, 0))
 
+        bloco_visualizacao = ttk.LabelFrame(painel_direito, text="Visualizacao do Grafo", padding=12)
+        bloco_visualizacao.grid(row=3, column=0, sticky="ew", pady=(0, 12))
+        bloco_visualizacao.columnconfigure(0, weight=1)
+
+        ttk.Label(
+            bloco_visualizacao,
+            text="Abre a rede em formato de teia usando BFS a partir do usuario selecionado.",
+            wraplength=280,
+            justify="left",
+        ).grid(row=0, column=0, sticky="w", pady=(0, 10))
+
+        botao_mostrar_rede = ttk.Button(
+            bloco_visualizacao,
+            text="Mostrar rede",
+            command=self.mostrar_rede,
+        )
+        botao_mostrar_rede.grid(row=1, column=0, sticky="ew")
+
         bloco_detalhes = ttk.LabelFrame(painel_direito, text="Detalhes do Usuario", padding=12)
         bloco_detalhes.grid(row=2, column=0, sticky="nsew", pady=(0, 12))
         bloco_detalhes.columnconfigure(0, weight=1)
@@ -222,6 +241,49 @@ class InterfaceRedeSocial:
             "Caminho encontrado",
             f"Caminho: {descricao_caminho}\nDistancia: {distancia} conexoes",
         )
+
+    def mostrar_rede(self):
+        usuarios = self.rede.listar_usuarios()
+        if not usuarios:
+            messagebox.showerror("Rede vazia", "Cadastre usuarios antes de visualizar a rede.")
+            return
+
+        origem = self._obter_usuario_base_bfs()
+        ordem, niveis, _ = self.rede.bfs(origem)
+
+        janela = tk.Toplevel(self.root)
+        janela.title("Visualizacao da Rede")
+        janela.geometry("1100x760")
+        janela.minsize(900, 650)
+
+        container = ttk.Frame(janela, padding=12)
+        container.pack(fill="both", expand=True)
+
+        descricao = ttk.Label(
+            container,
+            text=(
+                f"BFS iniciada em: {origem}\n"
+                f"Ordem de visita: {' -> '.join(ordem)}"
+            ),
+            justify="left",
+            wraplength=1040,
+        )
+        descricao.pack(fill="x", pady=(0, 10))
+
+        canvas = tk.Canvas(
+            container,
+            bg="#f7f7fb",
+            highlightthickness=1,
+            highlightbackground="#c7ccda",
+        )
+        canvas.pack(fill="both", expand=True)
+
+        canvas.update_idletasks()
+        largura = max(canvas.winfo_width(), 900)
+        altura = max(canvas.winfo_height(), 600)
+
+        posicoes = self._calcular_posicoes_rede(origem, niveis, largura, altura)
+        self._desenhar_rede(canvas, posicoes, origem, ordem, niveis)
 
     def atualizar_tela(self):
         usuarios = self.rede.listar_usuarios()
@@ -323,6 +385,123 @@ class InterfaceRedeSocial:
         widget.delete("1.0", tk.END)
         widget.insert("1.0", conteudo)
         widget.configure(state="disabled")
+
+    def _obter_usuario_base_bfs(self):
+        selecao = self.lista_usuarios.curselection()
+        if selecao:
+            return self.lista_usuarios.get(selecao[0])
+        return self.rede.listar_usuarios()[0]
+
+    def _calcular_posicoes_rede(self, origem, niveis, largura, altura):
+        centro_x = largura / 2
+        centro_y = altura / 2
+        margem = 90
+
+        usuarios_por_nivel = {}
+        for usuario, nivel in niveis.items():
+            usuarios_por_nivel.setdefault(nivel, []).append(usuario)
+
+        for usuarios in usuarios_por_nivel.values():
+            usuarios.sort()
+
+        max_nivel = max(niveis.values(), default=0)
+        area_util = min(largura, altura) / 2 - margem
+        espacamento = area_util / max(max_nivel, 1)
+        if max_nivel == 0:
+            espacamento = 0
+
+        posicoes = {}
+        posicoes[origem] = (centro_x, centro_y)
+
+        for nivel in range(1, max_nivel + 1):
+            usuarios = usuarios_por_nivel.get(nivel, [])
+            if not usuarios:
+                continue
+
+            raio = espacamento * nivel
+            total = len(usuarios)
+            deslocamento = (nivel % 2) * (math.pi / max(total, 2))
+
+            for indice, usuario in enumerate(usuarios):
+                angulo = deslocamento + (2 * math.pi * indice / total)
+                x = centro_x + raio * math.cos(angulo)
+                y = centro_y + raio * math.sin(angulo)
+                posicoes[usuario] = (x, y)
+
+        fora_do_componente = [usuario for usuario in self.rede.listar_usuarios() if usuario not in posicoes]
+        if fora_do_componente:
+            faixa_y = altura - 55
+            espacamento_x = largura / (len(fora_do_componente) + 1)
+            for indice, usuario in enumerate(fora_do_componente, start=1):
+                posicoes[usuario] = (espacamento_x * indice, faixa_y)
+
+        return posicoes
+
+    def _desenhar_rede(self, canvas, posicoes, origem, ordem, niveis):
+        largura = max(canvas.winfo_width(), 900)
+        altura = max(canvas.winfo_height(), 600)
+        centro_x = largura / 2
+        centro_y = altura / 2
+        max_nivel = max(niveis.values(), default=0)
+
+        if max_nivel > 0:
+            area_util = min(largura, altura) / 2 - 90
+            espacamento = area_util / max_nivel
+            for nivel in range(1, max_nivel + 1):
+                raio = espacamento * nivel
+                canvas.create_oval(
+                    centro_x - raio,
+                    centro_y - raio,
+                    centro_x + raio,
+                    centro_y + raio,
+                    outline="#d8dcea",
+                    dash=(3, 4),
+                )
+                canvas.create_text(
+                    centro_x,
+                    centro_y - raio - 12,
+                    text=f"Nivel {nivel}",
+                    fill="#6a7288",
+                    font=("Segoe UI", 9),
+                )
+
+        for usuario_a, usuario_b in self.rede.listar_conexoes():
+            x1, y1 = posicoes[usuario_a]
+            x2, y2 = posicoes[usuario_b]
+            canvas.create_line(x1, y1, x2, y2, fill="#94a3b8", width=2)
+
+        paleta = ["#ff6b6b", "#4dabf7", "#51cf66", "#fcc419", "#845ef7", "#20c997"]
+        ordem_visitada = {usuario: indice + 1 for indice, usuario in enumerate(ordem)}
+
+        for usuario in self.rede.listar_usuarios():
+            x, y = posicoes[usuario]
+            nivel = niveis.get(usuario)
+            if usuario == origem:
+                cor = "#ff922b"
+            elif nivel is None:
+                cor = "#adb5bd"
+            else:
+                cor = paleta[nivel % len(paleta)]
+
+            canvas.create_oval(x - 28, y - 28, x + 28, y + 28, fill=cor, outline="#1f2937", width=2)
+            canvas.create_text(x, y - 7, text=usuario, font=("Segoe UI", 9, "bold"), fill="#111827")
+
+            if usuario in ordem_visitada:
+                canvas.create_text(
+                    x,
+                    y + 10,
+                    text=f"BFS {ordem_visitada[usuario]}",
+                    font=("Segoe UI", 8),
+                    fill="#111827",
+                )
+            else:
+                canvas.create_text(
+                    x,
+                    y + 10,
+                    text="Fora do BFS",
+                    font=("Segoe UI", 8),
+                    fill="#111827",
+                )
 
 
 def main():
