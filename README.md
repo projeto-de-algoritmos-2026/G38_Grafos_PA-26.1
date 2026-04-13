@@ -248,3 +248,4 @@ Este projeto e adequado para atividades e apresentacoes sobre:
 ## Conclusao
 
 O projeto demonstra de forma clara como grafos podem ser aplicados na simulacao de uma rede social. A separacao entre interface e estrutura de dados facilita a manutencao do codigo e torna o sistema mais organizado para evolucoes futuras.
+Link para o vídeo: https://drive.google.com/file/d/1HpClLeTrtk8XtbwES8e6ZKqWGk9ULDdI/view?usp=sharing
