@@ -1,3 +1,6 @@
+import heapq
+
+
 class RedeSocialGrafo:
     """Representa uma rede social como um grafo nao direcionado.
 
@@ -78,3 +81,43 @@ class RedeSocialGrafo:
 
         usuario = max(usuarios, key=self.grau_usuario)
         return usuario, self.grau_usuario(usuario)
+
+    def caminho_mais_curto(self, origem, destino):
+        """Retorna o menor caminho (lista de usuarios) e sua distancia."""
+        if not self.usuario_existe(origem) or not self.usuario_existe(destino):
+            raise ValueError("Selecione usuarios validos para a busca.")
+
+        if origem == destino:
+            return [origem], 0
+
+        distancias = {origem: 0}
+        predecessores = {origem: None}
+        fila = [(0, origem)]
+
+        while fila:
+            distancia_atual, usuario = heapq.heappop(fila)
+
+            if usuario == destino:
+                break
+
+            if distancia_atual > distancias.get(usuario, float("inf")):
+                continue
+
+            for vizinho in self._adjacencias.get(usuario, []):
+                nova_distancia = distancia_atual + 1
+                if nova_distancia < distancias.get(vizinho, float("inf")):
+                    distancias[vizinho] = nova_distancia
+                    predecessores[vizinho] = usuario
+                    heapq.heappush(fila, (nova_distancia, vizinho))
+
+        if destino not in distancias:
+            return [], None
+
+        caminho = []
+        atual = destino
+        while atual is not None:
+            caminho.append(atual)
+            atual = predecessores.get(atual)
+
+        caminho.reverse()
+        return caminho, distancias[destino]

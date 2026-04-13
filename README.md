@@ -40,6 +40,7 @@ O programa atualmente oferece:
 - exibicao das conexoes da rede
 - visualizacao dos amigos de um usuario
 - identificacao de amigos em comum
+- busca do menor caminho entre dois usuarios, com destaque da distancia
 - analise basica da rede, como total de usuarios, total de conexoes e usuario mais conectado
 
 ## Interface
@@ -110,7 +111,7 @@ O sistema impede algumas operacoes invalidas:
 - criar amizade com usuarios inexistentes
 - duplicar uma amizade ja existente
 
-### 3. Analise da rede
+### 3. Analise da rede e caminhos
 
 O programa permite observar algumas propriedades do grafo:
 
@@ -119,6 +120,7 @@ O programa permite observar algumas propriedades do grafo:
 - grau de cada usuario
 - usuario com maior numero de conexoes
 - amigos em comum entre usuarios
+- menor caminho entre dois usuarios
 
 ## Exemplo de Uso
 
@@ -145,7 +147,6 @@ Este projeto e adequado para atividades e apresentacoes sobre:
 
 - remocao de usuarios
 - remocao de amizades
-- busca de caminho entre dois usuarios
 - recomendacao de amizades
 - persistencia em arquivo ou banco de dados
 - visualizacao grafica do grafo com desenho dos vertices e arestas

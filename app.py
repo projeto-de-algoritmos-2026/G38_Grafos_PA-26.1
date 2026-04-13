@@ -110,6 +110,26 @@ class InterfaceRedeSocial:
         )
         botao_amizade.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(10, 0))
 
+        bloco_caminho = ttk.LabelFrame(painel_direito, text="Caminho Mais Curto", padding=12)
+        bloco_caminho.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+        bloco_caminho.columnconfigure(1, weight=1)
+
+        ttk.Label(bloco_caminho, text="Origem").grid(row=0, column=0, sticky="w", pady=(0, 6))
+        ttk.Label(bloco_caminho, text="Destino").grid(row=1, column=0, sticky="w")
+
+        self.combo_caminho_origem = ttk.Combobox(bloco_caminho, state="readonly")
+        self.combo_caminho_origem.grid(row=0, column=1, sticky="ew", pady=(0, 6))
+
+        self.combo_caminho_destino = ttk.Combobox(bloco_caminho, state="readonly")
+        self.combo_caminho_destino.grid(row=1, column=1, sticky="ew")
+
+        botao_caminho = ttk.Button(
+            bloco_caminho,
+            text="Buscar",
+            command=self.buscar_caminho,
+        )
+        botao_caminho.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+
         bloco_detalhes = ttk.LabelFrame(painel_direito, text="Detalhes do Usuario", padding=12)
         bloco_detalhes.grid(row=2, column=0, sticky="nsew", pady=(0, 12))
         bloco_detalhes.columnconfigure(0, weight=1)
@@ -176,6 +196,33 @@ class InterfaceRedeSocial:
         self.atualizar_tela()
         messagebox.showinfo("Sucesso", f"Amizade criada entre {usuario_a} e {usuario_b}.")
 
+    def buscar_caminho(self):
+        origem = self.combo_caminho_origem.get()
+        destino = self.combo_caminho_destino.get()
+
+        if not origem or not destino:
+            messagebox.showerror("Busca invalida", "Selecione usuarios de origem e destino.")
+            return
+
+        try:
+            caminho, distancia = self.rede.caminho_mais_curto(origem, destino)
+        except ValueError as erro:
+            messagebox.showerror("Busca invalida", str(erro))
+            return
+
+        if not caminho:
+            messagebox.showinfo(
+                "Caminho nao encontrado",
+                f"Nao existe caminho entre {origem} e {destino}.",
+            )
+            return
+
+        descricao_caminho = " -> ".join(caminho)
+        messagebox.showinfo(
+            "Caminho encontrado",
+            f"Caminho: {descricao_caminho}\nDistancia: {distancia} conexoes",
+        )
+
     def atualizar_tela(self):
         usuarios = self.rede.listar_usuarios()
 
@@ -185,6 +232,8 @@ class InterfaceRedeSocial:
 
         self.combo_usuario_1["values"] = usuarios
         self.combo_usuario_2["values"] = usuarios
+        self.combo_caminho_origem["values"] = usuarios
+        self.combo_caminho_destino["values"] = usuarios
 
         self._atualizar_texto_conexoes()
         self._atualizar_texto_analise()
