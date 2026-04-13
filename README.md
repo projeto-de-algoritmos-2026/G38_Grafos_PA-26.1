@@ -1,17 +1,19 @@
 # Rede Social com Grafos
 
-Projeto em Python que simula uma rede social usando a teoria dos grafos. Cada usuario e tratado como um vertice, e cada amizade entre dois usuarios e representada como uma aresta.
+Projeto em Python que simula uma rede social usando teoria dos grafos. Cada usuario e tratado como um vertice, e cada amizade entre dois usuarios e representada como uma aresta.
 
-O sistema possui uma interface grafica simples em `tkinter` e foi desenvolvido para demonstrar, de forma pratica, como grafos podem ser usados para modelar relacoes sociais.
+O sistema possui interface grafica simples em `tkinter` e foi desenvolvido para mostrar, na pratica, como grafos podem representar relacionamentos sociais.
 
 ## Objetivo
 
-O objetivo deste projeto e construir uma simulacao de rede social com base em grafos, permitindo:
+O objetivo do projeto e construir uma simulacao de rede social com base em grafos, permitindo:
 
 - cadastrar usuarios
 - criar amizades entre usuarios
 - visualizar conexoes existentes
 - analisar a estrutura da rede
+- buscar caminhos entre usuarios
+- exibir a rede graficamente
 
 ## Modelagem com Grafos
 
@@ -28,7 +30,7 @@ Se `Ana` e amiga de `Bruno`, o grafo registra:
 - `Ana -> Bruno`
 - `Bruno -> Ana`
 
-Na pratica, isso significa que a amizade e compartilhada entre os dois usuarios, caracterizando um grafo nao direcionado.
+Na pratica, isso caracteriza uma relacao bidirecional, propria de um grafo nao direcionado.
 
 ## Funcionalidades
 
@@ -40,8 +42,9 @@ O programa atualmente oferece:
 - exibicao das conexoes da rede
 - visualizacao dos amigos de um usuario
 - identificacao de amigos em comum
-- busca do menor caminho entre dois usuarios, com destaque da distancia
-- sugestoes de amizade (pessoas que voce talvez conheca) baseadas em amigos dos amigos
+- busca do menor caminho entre dois usuarios
+- sugestoes de amizade baseadas em amigos dos amigos
+- visualizacao grafica da rede em formato de teia
 - analise basica da rede, como total de usuarios, total de conexoes e usuario mais conectado
 
 ## Interface
@@ -52,6 +55,8 @@ Ela possui:
 
 - area para cadastro de usuarios
 - area para criar conexoes entre dois usuarios
+- area para buscar o caminho mais curto entre dois usuarios
+- botao para mostrar a rede graficamente
 - lista de usuarios cadastrados
 - painel com as conexoes da rede
 - painel de detalhes do usuario selecionado
@@ -99,8 +104,8 @@ Essa abordagem facilita:
 
 - insercao de usuarios
 - criacao de conexoes
-- busca por amizades
-- calculo do grau de cada vertice
+- consulta dos vizinhos de cada vertice
+- calculo do grau de cada usuario
 
 ### 2. Regras de negocio
 
@@ -112,7 +117,7 @@ O sistema impede algumas operacoes invalidas:
 - criar amizade com usuarios inexistentes
 - duplicar uma amizade ja existente
 
-### 3. Analise da rede e caminhos
+### 3. Analise da rede
 
 O programa permite observar algumas propriedades do grafo:
 
@@ -121,8 +126,94 @@ O programa permite observar algumas propriedades do grafo:
 - grau de cada usuario
 - usuario com maior numero de conexoes
 - amigos em comum entre usuarios
-- menor caminho entre dois usuarios (usando Dijkstra com distancias unitarias)
-- sugestoes de amizade calculadas com amigos dos amigos (BFS limitada a dois niveis)
+- menor caminho entre dois usuarios
+- sugestoes de amizade
+- visualizacao da rede organizada por niveis
+
+## Algoritmos de Grafos Utilizados
+
+Esta secao descreve os principais algoritmos e tecnicas de grafos usados no projeto e onde eles aparecem.
+
+### 1. BFS - Busca em Largura
+
+A BFS (`Breadth-First Search`) percorre o grafo por niveis, visitando primeiro os vizinhos mais proximos e depois os mais distantes.
+
+Ela e usada em:
+
+- `grafo.py`, no metodo `bfs(origem)`
+- `grafo.py`, no metodo `caminho_mais_curto(origem, destino)`
+- `app.py`, no botao `Mostrar rede`
+
+No projeto, a BFS serve para:
+
+- gerar a ordem de visita dos usuarios
+- descobrir o nivel de cada usuario em relacao ao usuario inicial
+- definir predecessores durante a exploracao
+- organizar a visualizacao da rede em formato de teia
+
+### 2. Menor Caminho em Grafo Nao Ponderado
+
+Como todas as amizades possuem o mesmo peso, o menor caminho entre dois usuarios pode ser encontrado com BFS.
+
+Esse algoritmo e usado em:
+
+- `grafo.py`, no metodo `caminho_mais_curto(origem, destino)`
+- `app.py`, na funcionalidade de busca entre origem e destino
+
+O resultado apresentado ao usuario inclui:
+
+- a sequencia de vertices do caminho
+- a distancia em numero de arestas
+
+### 3. Lista de Adjacencia
+
+A representacao do grafo foi feita com lista de adjacencia, uma estrutura eficiente para grafos esparsos como redes sociais pequenas e medias.
+
+Ela e usada em:
+
+- `grafo.py`, no atributo `_adjacencias`
+
+Essa estrutura e a base para:
+
+- armazenar usuarios
+- registrar amizades
+- consultar vizinhos
+- percorrer o grafo
+
+### 4. Calculo do Grau dos Vertices
+
+O grau de um vertice corresponde ao numero de conexoes de um usuario.
+
+Esse calculo e usado em:
+
+- `grafo.py`, no metodo `grau_usuario(usuario)`
+- `grafo.py`, no metodo `usuario_mais_conectado()`
+- `app.py`, no painel `Analise da Rede`
+
+Com isso, o sistema consegue identificar:
+
+- quantas amizades cada usuario possui
+- qual usuario possui mais conexoes
+
+### 5. Interseccao de Vizinhos
+
+Para descobrir amigos em comum, o sistema compara os conjuntos de vizinhos de dois usuarios.
+
+Essa tecnica e usada em:
+
+- `grafo.py`, no metodo `amigos_em_comum(usuario_a, usuario_b)`
+- `app.py`, no painel `Detalhes do Usuario`
+
+### 6. Recomendacao de Amigos
+
+As recomendacoes sao baseadas na ideia de amigos dos amigos. O sistema analisa usuarios a distancia 2 que ainda nao possuem conexao direta com o usuario principal.
+
+Esse processo e usado em:
+
+- `grafo.py`, no metodo `recomendar_amigos_bfs(usuario, limite=5)`
+- `app.py`, na secao `Pessoas que voce talvez conheca`
+
+Na pratica, a recomendacao funciona contando quantos amigos em comum existem entre o usuario e cada candidato.
 
 ## Exemplo de Uso
 
@@ -134,7 +225,7 @@ Ao iniciar o programa, alguns usuarios ja sao carregados para demonstracao:
 - Diego
 - Elisa
 
-Com isso, o usuario pode testar imediatamente a criacao de novas conexoes e a visualizacao da rede.
+Com isso, o usuario pode testar imediatamente a criacao de novas conexoes, a busca de caminhos e a visualizacao da rede.
 
 ## Aplicacao Academica
 
@@ -143,14 +234,16 @@ Este projeto e adequado para atividades e apresentacoes sobre:
 - teoria dos grafos
 - estruturas de dados
 - modelagem de redes sociais
-- representacao de relacionamentos em sistemas computacionais
+- busca em largura
+- menor caminho em grafos nao ponderados
 
 ## Possiveis Melhorias Futuras
 
 - remocao de usuarios
 - remocao de amizades
 - persistencia em arquivo ou banco de dados
-- visualizacao grafica do grafo com desenho dos vertices e arestas
+- destaque visual do menor caminho encontrado
+- animacao da ordem de visita da BFS
 
 ## Conclusao
 
