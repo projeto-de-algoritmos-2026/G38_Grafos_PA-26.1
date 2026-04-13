@@ -273,6 +273,15 @@ class InterfaceRedeSocial:
             else:
                 linhas.append("- Nenhum amigo em comum")
 
+        sugestoes = self.rede.recomendar_amigos_bfs(usuario, limite=5)
+        linhas.append("")
+        linhas.append("Pessoas que voce talvez conheca:")
+        if sugestoes:
+            for nome, pontos in sugestoes:
+                linhas.append(f"- {nome} ({pontos} amigo(s) em comum)")
+        else:
+            linhas.append("- Nenhuma sugestao no momento")
+
         self._definir_texto(self.texto_detalhes, "\n".join(linhas))
 
     def _atualizar_texto_conexoes(self):

@@ -41,6 +41,7 @@ O programa atualmente oferece:
 - visualizacao dos amigos de um usuario
 - identificacao de amigos em comum
 - busca do menor caminho entre dois usuarios, com destaque da distancia
+- sugestoes de amizade (pessoas que voce talvez conheca) baseadas em amigos dos amigos
 - analise basica da rede, como total de usuarios, total de conexoes e usuario mais conectado
 
 ## Interface
@@ -120,7 +121,8 @@ O programa permite observar algumas propriedades do grafo:
 - grau de cada usuario
 - usuario com maior numero de conexoes
 - amigos em comum entre usuarios
-- menor caminho entre dois usuarios
+- menor caminho entre dois usuarios (usando Dijkstra com distancias unitarias)
+- sugestoes de amizade calculadas com amigos dos amigos (BFS limitada a dois niveis)
 
 ## Exemplo de Uso
 
@@ -147,7 +149,6 @@ Este projeto e adequado para atividades e apresentacoes sobre:
 
 - remocao de usuarios
 - remocao de amizades
-- recomendacao de amizades
 - persistencia em arquivo ou banco de dados
 - visualizacao grafica do grafo com desenho dos vertices e arestas
 

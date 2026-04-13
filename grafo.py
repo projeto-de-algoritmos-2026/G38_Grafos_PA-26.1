@@ -121,3 +121,23 @@ class RedeSocialGrafo:
 
         caminho.reverse()
         return caminho, distancias[destino]
+
+    def recomendar_amigos_bfs(self, usuario, limite=5):
+        """Sugere amigos dos amigos usando uma BFS limitada a distancia 2."""
+        if not self.usuario_existe(usuario):
+            return []
+
+        amigos = self._adjacencias[usuario]
+        pontuacoes = {}
+
+        for amigo in amigos:
+            for candidato in self._adjacencias.get(amigo, []):
+                if candidato == usuario or candidato in amigos:
+                    continue
+                pontuacoes[candidato] = pontuacoes.get(candidato, 0) + 1
+
+        recomendacoes = sorted(
+            pontuacoes.items(),
+            key=lambda item: (-item[1], item[0]),
+        )
+        return recomendacoes[:limite]
